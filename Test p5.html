@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sketch p5.js Exemplo</title>
+
+  <!-- Importa a biblioteca p5.js (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.js"></script>
+
+  <!-- Código JavaScript do sketch p5.js -->
+  <script>
+    const QUANTIDADE_INIMIGOS_LINHA = 5; 
+const QUANTIDADE_INIMIGOS_COLUNA = 3; 
+
+
+class Jogador {
+  constructor(posX) {
+    this.pos = posX;
+    this.speed = 8;
+    this.active = true;
+  }
+
+  desenho() {
+    rect(this.pos, 500, 45, 60);
+  }
+
+  mover() {
+    if (this.active === true) {
+      if (keyIsDown(LEFT_ARROW) && this.pos > 0) {
+        this.pos -= this.speed;
+      }
+      if (keyIsDown(RIGHT_ARROW) && this.pos < width - 45) {
+        this.pos += this.speed;
+      }
+    }
+  }
+}
+
+class Inimigo {
+  constructor(posX, posY, raio) {
+    this.pos = createVector(posX, posY);
+    this.raio = raio;
+    this.vidas = 3;
+    this.destruido = false;
+    this.projeteis = [];
+  }
+
+  desenho() {
+    if (this.destruido === false) {
+      if (this.vidas === 3) fill(255, 0, 0);
+      else if (this.vidas === 2) fill(255, 165, 0);
+      else if (this.vidas === 1) fill(255, 255, 0);
+      
+      circle(this.pos.x, this.pos.y, this.raio * 2);
+    }
+  }
+
+    mover(direcao) {
+    this.pos.x += direcao * 10;
+  }
+  
+  verificarColisao(projetil) {
+    if (
+      projetil.pos.y <= this.pos.y + this.raio &&
+      projetil.pos.y >= this.pos.y - this.raio &&
+      projetil.pos.x >= this.pos.x - this.raio &&
+      projetil.pos.x <= this.pos.x + this.raio
+    ) {
+      this.vidas -= 1;
+      if (this.vidas <= 0) {
+        this.destruido = true;
+      }
+      return true; 
+    }
+    return false;
+  }
+  verificarColisaoComJogador(jogador) {
+    if (
+      this.destruido === false &&
+      this.pos.y + this.raio >= 500 &&
+      this.pos.x + this.raio >= jogador.pos &&
+      this.pos.x - this.raio <= jogador.pos + 45
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  disparar() {
+    let projetil = new ProjetilInimigo(this.pos.x, this.pos.y + 20, 10, 20);
+    this.projeteis.push(projetil);
+  }
+}
+
+class Projetil {
+  constructor(posX, posY, largura, altura) {
+    this.pos = createVector(posX, posY);
+    this.largura = largura;
+    this.altura = altura;
+  }
+
+  disparar() {
+    fill(0, 0, 255);
+    rect(this.pos.x, this.pos.y, this.largura, this.altura);
+  }
+
+  tratarColisoes(inimigos, barreiras) {
+  for (let i = 0; i < inimigos.length; i++) {
+    if (!inimigos[i].destruido && inimigos[i].verificarColisao(this)) {
+      if (inimigos[i].vidas <= 0) {
+        inimigos[i].destruido = true;
+      }
+      return true;
+    }
+  }
+
+    for (let i = 0; i < barreiras.length; i++) {
+      if (
+        barreiras[i].vida > 0 &&
+        this.pos.x >= barreiras[i].x &&
+        this.pos.x <= barreiras[i].x + barreiras[i].largura &&
+        this.pos.y >= barreiras[i].y &&
+        this.pos.y <= barreiras[i].y + barreiras[i].altura
+      ) {
+        barreiras[i].vida -= 1;
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+class ProjetilInimigo {
+  constructor(posX, posY, largura, altura) {
+    this.pos = createVector(posX, posY);
+    this.largura = largura;
+    this.altura = altura;
+  }
+
+  disparar() {
+    fill(255, 0, 0);
+    rect(this.pos.x, this.pos.y, this.largura, this.altura);
+  }
+
+  atualizar() {
+    this.pos.y += 5;
+  }
+
+  tratarColisaoComJogador(jogador) {
+    return this.pos.y >= 500 &&
+           this.pos.x >= jogador.pos &&
+           this.pos.x <= jogador.pos + 45;
+  }
+
+  tratarColisaoComBarreira(barreiras) {
+    for (let i = 0; i < barreiras.length; i++) {
+      if (barreiras[i].vida > 0 &&
+          this.pos.x >= barreiras[i].x &&
+          this.pos.x <= barreiras[i].x + barreiras[i].largura &&
+          this.pos.y >= barreiras[i].y &&
+          this.pos.y <= barreiras[i].y + barreiras[i].altura) {
+        barreiras[i].vida -= 1; 
+        return true; 
+      }
+    }
+    return false; 
+  }
+
+  sairDaTela() {
+    return this.pos.y > height;
+  }
+}
+
+class Barreira {
+  constructor(x, y, largura, altura) {
+    this.x = x;
+    this.y = y;
+    this.largura = largura;
+    this.altura = altura;
+    this.vida = 4;
+  }
+
+  desenho() {
+    if (this.vida > 0) {
+      fill(100, 200, 100);
+      rect(this.x, this.y, this.largura, this.altura);
+    }
+  }
+
+  criarBarreiras() {
+    let barreiras = [];
+    for (let i = 0; i < 4; i++) {
+      barreiras.push(new Barreira(80 + i * 180, 420, 80, 40));
+    }
+    return barreiras;
+  }
+}
+
+class Placar {
+  constructor() {
+    this.pontos = 0;
+  }
+
+  incrementar(valor) {
+    this.pontos += valor;
+  }
+
+  atualizar(inimigos, barreiras) {
+    for (let i = inimigos.length - 1; i >= 0; i--) {
+      if (inimigos[i].destruido === true) {
+        inimigos.splice(i, 1);
+        this.incrementar(400); 
+      }
+    }
+
+    for (let i = 0; i < barreiras.length; i++) {
+      if (barreiras[i].vida === 0) {
+        this.incrementar(50); 
+        barreiras[i].vida = -1; 
+      }
+    }
+  }
+
+  exibir() {
+    fill(255);
+    textSize(24);
+    textAlign(RIGHT, TOP);
+    text("Pontos: " + this.pontos, width - 20, 20);
+  }
+}
+
+class Jogo {
+  constructor() {
+    this.inimigos = [];
+    this.jogador = new Jogador(width / 2);
+    this.placar = new Placar();
+    this.barreiras = [];
+    this.estáDisparando = false;
+    this.projetil = null;
+    this.jogoAtivo = true;
+    this.direcaoInimigos = 1; 
+  }
+
+  setup() {
+    this.barreiras = new Barreira().criarBarreiras();
+
+    let espacamentoX = (width - 100) / QUANTIDADE_INIMIGOS_LINHA;
+    let espacamentoY = 100;
+
+    for (let i = 0; i < QUANTIDADE_INIMIGOS_LINHA; i++) {
+      for (let j = 0; j < QUANTIDADE_INIMIGOS_COLUNA; j++) {
+        this.inimigos.push(new Inimigo(50 + i * espacamentoX, 50 + j * espacamentoY, 20));
+      }
+    }
+
+    setInterval(() => {
+      if (this.jogoAtivo) {
+        this.moverInimigos();
+      }
+    }, 500);
+
+    setInterval(() => {
+      for (let i = 0; i < this.inimigos.length; i++) {
+        if (this.inimigos[i].destruido == false && Math.random() < 0.1) {
+          this.inimigos[i].disparar();
+        }
+      }
+    }, 1000);
+  }
+
+  moverInimigos() {
+    let moverParaBaixo = false;
+
+    for (let i = 0; i < this.inimigos.length; i++) {
+      if (this.inimigos[i].destruido === false) {
+        this.inimigos[i].mover(this.direcaoInimigos);
+      }
+    }
+
+    for (let i = 0; i < this.inimigos.length; i++) {
+      if (this.inimigos[i].pos.x >= width - 20 || this.inimigos[i].pos.x <= 20) {
+        moverParaBaixo = true;
+        break;
+      }
+    }
+
+    if (moverParaBaixo) {
+      this.direcaoInimigos *= -1;
+      for (let i = 0; i < this.inimigos.length; i++) {
+        this.inimigos[i].pos.y += 50;
+      }
+    }
+  }
+
+  draw() {
+    background(0);
+
+    if (this.jogoAtivo === true) {
+      this.jogador.desenho();
+      this.jogador.mover();
+
+      for (let i = 0; i < this.barreiras.length; i++) {
+        this.barreiras[i].desenho();
+      }
+
+      if (this.estáDisparando && this.projetil) {
+        this.projetil.disparar();
+        this.projetil.pos.y -= 15;
+
+        if (this.projetil.tratarColisoes(this.inimigos, this.barreiras)) {
+          this.estáDisparando = false;
+          this.projetil = null;
+        } else if (this.projetil.pos.y < 0) {
+          this.estáDisparando = false;
+          this.projetil = null;
+        }
+      }
+
+      for (let i = 0; i < this.inimigos.length; i++) {
+        this.inimigos[i].desenho();
+
+        for (let j = 0; j < this.inimigos[i].projeteis.length; j++) {
+          let p = this.inimigos[i].projeteis[j];
+          p.atualizar();
+          p.disparar();
+
+          if (p.tratarColisaoComJogador(this.jogador)) {
+            this.jogoAtivo = false;
+            break;
+          }
+
+          if (p.tratarColisaoComBarreira(this.barreiras)) {
+            this.inimigos[i].projeteis.splice(j, 1); 
+          }
+
+          if (p.sairDaTela()) {
+            this.inimigos[i].projeteis.splice(j, 1);
+          }
+        }
+      }
+
+      this.placar.atualizar(this.inimigos, this.barreiras);
+      this.placar.exibir();
+    } else {
+      fill(255, 0, 0);
+      textSize(32);
+      textAlign(CENTER, CENTER);
+      text("Fim de Jogo", width / 2, height / 2);
+    }
+  }
+
+  keyPressed() {
+    if (keyCode === ENTER && this.estáDisparando == false && this.jogoAtivo) {
+      this.projetil = new Projetil(this.jogador.pos + 10, 450, 10, 20);
+      this.estáDisparando = true;
+    }
+  }
+}
+
+let jogo;
+
+function setup() {
+  createCanvas(800, 600);
+  jogo = new Jogo()
+  jogo.setup();
+}
+
+function draw() {
+  jogo.draw();
+}
+
+function keyPressed() {
+  jogo.keyPressed();
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>
