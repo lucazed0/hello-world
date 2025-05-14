@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bolinhas batendoh</title>
+
+  <!-- Importa a biblioteca p5.js (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.js"></script>
+
+  <!-- Código JavaScript do sketch p5.js -->
+  <script>
+   let posicoes = [];
+let velocidades = [];
+let numBolas = 10;
+let raio = [];
+let colour = [];
+
+function setup() {
+  createCanvas(600, 400); 
+  for (let i = 0; i < numBolas; i++) {
+    let pos = createVector(random(0, width), random(0, height));
+    let vel = createVector(random(-3, 3), random(-3, 3));
+    let rai = createVector(random(2,20), random(2,20));
+    let cor = createVector(random(1,255),random(1,255),random(1,255))
+    posicoes.push(pos);
+    velocidades.push(vel);
+    raio.push(rai);
+    colour.push(cor);
+  }
+}
+
+  function draw() {
+  background(51);
+  noStroke();
+  for (let i = 0; i < numBolas; i++) {
+    let pos = posicoes[i];
+    let vel = velocidades[i];
+    let rai = raio [i];
+    let cor = colour[i];
+    
+    pos.add(vel);
+    if (pos.x - rai.x < 0 || pos.x + rai.x > width) {
+      vel.x = vel.x * -1;
+    }
+    if (pos.y - rai.y < 0 || pos.y + rai.y > height) {
+      vel.y = vel.y * -1;
+    }
+    fill(cor.x, cor.y, cor.z);
+    ellipse(pos.x, pos.y, rai.x*2, rai.y*2);
+  }
+
+}
+  </script>
+</head>
+<body>
+</body>
+</html>
