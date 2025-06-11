@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-5" />
+  <title>Tabelinha Simples</title>
+</head>
+<body>
+
+<table id="tabela">
+  <thead>
+    <tr>
+      <th onclick="ordenarTabela()">Nome</th>
+      <th>Idade</th>
+    </tr>
+  </thead>
+  <tbody id="dadosTabela">
+    <tr><td>Carlos</td><td>30</td></tr>
+    <tr><td>Ana</td><td>25</td></tr>
+    <tr><td>Bruno</td><td>28</td></tr>
+    <tr><td>Diogo</td><td>17</td></tr>
+    <tr><td>Amanda</td><td>32</td></tr>
+    <tr><td>Gabriel</td><td>29</td></tr>
+    <tr><td>Helena</td><td>24</td></tr>
+    <tr><td>Igor</td><td>33</td></tr>
+    <tr><td>Julia</td><td>26</td></tr>
+    <tr><td>Lucas</td><td>31</td></tr>
+  </tbody>
+</table>
+
+<input type="text" id="busca" onkeyup="buscarTabela()" placeholder="Buscar nome ou idade">
+
+<br><br>
+
+<button onclick="paginaAnterior()">Anterior</button>
+<button onclick="proximaPagina()">Próxima</button>
+
+<script>
+//busca linear +, armazenando indices em um array.
+
+let numeros = [12, 17, 19, 7, 5, 1, 14, 0, 8, 17, 2, 18, 11, 20, 6, 9, 17, 10, 4, 13];
+
+function buscaLinear(arr, valor) {
+  let indices = [];
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] === valor) {
+      indices.push(i);
+    }
+  }
+  return indices;
+}
+
+let valorProcurado = 17;
+let indices = buscaLinear(numeros, valorProcurado);
+
+console.log(numeros);
+
+console.log(indices);
+
+//bubblesort organizando de forma decrescente.
+
+let numeros2 = [12, 3, 19, 7, 5, 1, 14, 17, 8, 15, 2, 18, 11, 20, 6, 9, 16, 10, 4, 13]; 
+
+
+function bubbleSort(arr) {
+  let temp;
+  for(let i = 0; i < arr.length; i++) {                   // 1
+    for(let j = 0; j < arr.length - 1 - i; j++) {         // 2
+      if(arr[j] < arr[j + 1]) {                           // 3
+        temp = arr[j];                                    // 4
+        arr[j] = arr[j + 1];                              // 5
+        arr[j + 1] = temp;                                // 6
+      }
+    }
+  }
+  return arr;                                             // 7
+}
+
+
+let ordenado = bubbleSort(numeros2);
+
+console.log("Array ordenado:", ordenado);
+
+//array de usuários organizados por idade (crescente) onde se houver idades iguais, a ordem será decidida alfabéticamente.
+
+class Usuario {
+  constructor(nome, idade) {
+    this.nome = nome;
+    this.idade = idade;
+  }
+}
+
+const ana = new Usuario("Ana", 25);
+const bruno = new Usuario("Bruno", 17);
+const carlos = new Usuario("Carlos", 32);
+const diogo = new Usuario("Diogo", 27);
+const amanda = new Usuario("Amanda", 25);
+
+
+let lista = [bruno,diogo,ana,carlos,amanda];
+
+function organizaUsers(arr) {
+  let temp;
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = 0; j < arr.length - 1 - i; j++) {
+      if (arr[j].idade > arr[j + 1].idade) {
+        temp = arr[j];
+        arr[j] = arr[j + 1];
+        arr[j + 1] = temp;
+      } else if (arr[j].idade === arr[j + 1].idade && arr[j].nome > arr[j + 1].nome) {
+        temp = arr[j];
+        arr[j] = arr[j + 1];
+        arr[j + 1] = temp;
+      }
+    }
+  }
+  return arr;
+}
+
+let organizado = organizaUsers(lista);
+let nomesOrdenados = [];
+for (let i = 0; i < organizado.length; i++) {
+  nomesOrdenados.push(organizado[i].nome);
+}
+
+console.log("Nomes ordenados por idade (e nome em caso de empate):", nomesOrdenados);
+
+//tabela com busca por nomes e idade com limite de amostragem por página.
+
+var paginaAtual = 1;
+var registrosPorPagina = 5;
+
+function mostrarPagina() {
+  var tabela = document.getElementById("dadosTabela");
+  var linhas = tabela.getElementsByTagName("tr");
+  var totalLinhas = linhas.length;
+  var inicio = (paginaAtual - 1) * registrosPorPagina;
+  var fim = inicio + registrosPorPagina;
+
+  for (var i = 0; i < totalLinhas; i++) {
+    if (i >= inicio && i < fim) {
+      linhas[i].style.display = "";
+    } else {
+      linhas[i].style.display = "none";
+    }
+  }
+}
+
+function paginaAnterior() {
+  if (paginaAtual > 1) {
+    paginaAtual--;
+    mostrarPagina();
+  }
+}
+
+function proximaPagina() {
+  var totalLinhas = document.getElementById("dadosTabela").getElementsByTagName("tr").length;
+  var totalPaginas = Math.ceil(totalLinhas / registrosPorPagina);
+  if (paginaAtual < totalPaginas) {
+    paginaAtual++;
+    mostrarPagina();
+  }
+}
+
+function ordenarTabela() {
+  var tabela = document.getElementById("dadosTabela");
+  var linhas = tabela.getElementsByTagName("tr");
+  var linhasArray = [];
+
+  for (var i = 0; i < linhas.length; i++) {
+    linhasArray.push(linhas[i]);
+  }
+
+  linhasArray.sort(function(a, b) {
+    var nomeA = a.cells[0].textContent.toLowerCase();
+    var nomeB = b.cells[0].textContent.toLowerCase();
+    if (nomeA < nomeB) return -1;
+    if (nomeA > nomeB) return 1;
+    return 0;
+  });
+
+  for (var i = 0; i < linhasArray.length; i++) {
+    tabela.appendChild(linhasArray[i]);
+  }
+
+  mostrarPagina();
+}
+
+function buscarTabela() {
+  var filtro = document.getElementById("busca").value.toUpperCase();
+  var tabela = document.getElementById("dadosTabela");
+  var linhas = tabela.getElementsByTagName("tr");
+
+  for (var i = 0; i < linhas.length; i++) {
+    var nome = linhas[i].cells[0].textContent.toUpperCase();
+    var idade = linhas[i].cells[1].textContent.toUpperCase();
+
+    if (nome.indexOf(filtro) > -1 || idade.indexOf(filtro) > -1) {
+      linhas[i].style.display = "";
+    } else {
+      linhas[i].style.display = "none";
+    }
+  }
+}
+
+mostrarPagina();
+</script>
+
+</body>
+</html>
